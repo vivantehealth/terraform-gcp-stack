@@ -16,9 +16,16 @@ resource "github_actions_environment_secret" "folder_terraformer_key" {
   plaintext_value = var.folder_terraformer_gcp_key
 }
 # Store the domain's project id for easier access during github actions workflows
-resource "github_actions_environment_secret" "project_id" {
+resource "github_actions_environment_secret" "domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_environment.environment
-  secret_name     = "PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = var.domain_project_id
+}
+# Store the terraform state project id for auto terraform backend configuration
+resource "github_actions_environment_secret" "terraform_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_environment.environment
+  secret_name     = "TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = var.terraform_project_id
 }

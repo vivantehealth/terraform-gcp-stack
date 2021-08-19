@@ -13,6 +13,11 @@ variable "domain_project_id" {
   type        = string
 }
 
+variable "terraform_project_id" {
+  description = "Folder Terraform GCP Project ID"
+  type        = string
+}
+
 variable "folder_terraformer_gcp_key" {
   description = "Service account key for the folder terraformer. This will be stored as repo environment secrets for each stack so they can do their own infrastructure terraforming"
   type        = string
