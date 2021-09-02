@@ -57,14 +57,14 @@ resource "google_service_account" "terraformer" {
   account_id   = "sa-tf-admin-${random_id.suffix}"
   description  = "Terraform SA for ${var.repo}"
   display_name = "${var.repo} Terraformer"
-  project      = google_project.this.project_id
+  project      = var.domain_project_id
 }
 
 resource "google_service_account" "terraform_planner" {
   account_id   = "sa-tf-read-${random_id.suffix}"
   description  = "Terraform read-only SA for ${var.repo}"
   display_name = "${var.repo} Terraform Planner"
-  project      = google_project.this.project_id
+  project      = var.domain_project_id
 }
 
 resource "google_cloud_identity_group_membership" "terraformer_membership" {
