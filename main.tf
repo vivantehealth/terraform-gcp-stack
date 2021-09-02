@@ -54,14 +54,14 @@ resource "random_id" "suffix" {
 
 # Create stack's terraforming service account
 resource "google_service_account" "terraformer" {
-  account_id   = "sa-tf-admin-${random_id.suffix}"
+  account_id   = "sa-tf-admin-${random_id.suffix.hex}"
   description  = "Terraform SA for ${var.repo}"
   display_name = "${var.repo} Terraformer"
   project      = var.domain_project_id
 }
 
 resource "google_service_account" "terraform_planner" {
-  account_id   = "sa-tf-read-${random_id.suffix}"
+  account_id   = "sa-tf-read-${random_id.suffix.hex}"
   description  = "Terraform read-only SA for ${var.repo}"
   display_name = "${var.repo} Terraform Planner"
   project      = var.domain_project_id
