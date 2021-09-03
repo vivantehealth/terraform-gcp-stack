@@ -68,7 +68,7 @@ resource "google_service_account" "terraform_planner" {
 }
 
 resource "google_cloud_identity_group_membership" "terraformer_membership" {
-  group = var.terraformers_group_id
+  group = var.terraformers_google_group_id
   preferred_member_key {
     id = google_service_account.terraformer.email
   }
@@ -78,7 +78,7 @@ resource "google_cloud_identity_group_membership" "terraformer_membership" {
 }
 
 resource "google_cloud_identity_group_membership" "terraform_planner_membership" {
-  group = var.terraform_planners_group_id
+  group = var.terraform_planners_google_group_id
   preferred_member_key {
     id = google_service_account.terraform_planner.email
   }

@@ -23,12 +23,12 @@ variable "terraform_apply_reviewers" {
   type        = list(string)
 }
 
-variable "terraform_planners_group_id" {
+variable "terraform_planners_google_group_id" {
   description = "Google group ID for the terraform planner service account"
   type        = string
 }
 
-variable "terraformers_group_id" {
+variable "terraformers_google_group_id" {
   description = "Google group ID for the terraformer service account"
   type        = string
 }
