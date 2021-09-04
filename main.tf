@@ -72,8 +72,12 @@ resource "google_cloud_identity_group_membership" "terraformer_membership" {
   preferred_member_key {
     id = google_service_account.terraformer.email
   }
-  roles {
-    name = "MEMBER"
+  # Create a "roles" block for each string in var.group_roles
+  dynamic "roles" {
+    for_each = var.group_roles
+    content {
+      name = roles.value
+    }
   }
 }
 
