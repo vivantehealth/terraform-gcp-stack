@@ -72,6 +72,14 @@ resource "google_cloud_identity_group_membership" "terraformer_membership" {
   preferred_member_key {
     id = google_service_account.terraformer.email
   }
+  lifecycle {
+    ignore_changes = [
+      roles,
+      group,
+      preferred_member_key,
+      member_key,
+    ]
+  }
   # Create a "roles" block for each string in var.group_roles
   dynamic "roles" {
     for_each = var.group_roles
