@@ -71,8 +71,8 @@ resource "null_resource" "terraformer_membership" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<-EOT
-      echo "${var.group_roles}"
-      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships"
+      members=$(echo "${jsonencode(var.group_roles)}" | jq '[.[] | {name: .}]')
+      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships"
     EOT
   }
 }
