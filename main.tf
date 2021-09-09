@@ -77,7 +77,6 @@ resource "google_cloud_identity_group_membership" "terraformer_membership" {
       roles,
       group,
       preferred_member_key,
-      member_key,
     ]
   }
   # Create a "roles" block for each string in var.group_roles
