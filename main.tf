@@ -67,36 +67,29 @@ resource "google_service_account" "terraform_planner" {
   project      = var.domain_project_id
 }
 
-resource "google_cloud_identity_group_membership" "terraformer_membership" {
-  group = var.terraformers_google_group_id
-  preferred_member_key {
-    id = google_service_account.terraformer.email
-  }
+resource "null_resource" "terraformer_membership" {
+  group        = var.terraformers_google_group_id
+  member_email = google_service_account.terraformer.email
+  roles        = var.group_roles
   provisioner "local-exec" {
-    command = "echo this should work"
-  }
-  # Create a "roles" block for each string in var.group_roles
-  dynamic "roles" {
-    for_each = var.group_roles
-    content {
-      name = roles.value
-    }
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      echo "${var.group_roles}"
+      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${self.member_email}" } }' https://cloudidentity.googleapis.com/v1beta1/${self.group}/memberships"
+    EOT
   }
 }
 
 resource "google_cloud_identity_group_membership" "terraform_planner_membership" {
-  group = var.terraform_planners_google_group_id
-  preferred_member_key {
-    id = google_service_account.terraform_planner.email
-  }
+  group        = var.terraform_planners_google_group_id
+  member_email = google_service_account.terraform_planner.email
+  roles        = var.group_roles
   provisioner "local-exec" {
-    command = "echo this should also work"
-  }
-  # Create a "roles" block for each string in var.group_roles
-  dynamic "roles" {
-    for_each = var.group_roles
-    content {
-      name = roles.value
-    }
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      echo "${var.group_roles}"
+      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${self.member_email}" } }' https://cloudidentity.googleapis.com/v1beta1/${self.group}/memberships"
+    EOT
   }
 }
+
