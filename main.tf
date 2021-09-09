@@ -68,27 +68,21 @@ resource "google_service_account" "terraform_planner" {
 }
 
 resource "null_resource" "terraformer_membership" {
-  group        = var.terraformers_google_group_id
-  member_email = google_service_account.terraformer.email
-  roles        = var.group_roles
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<-EOT
       echo "${var.group_roles}"
-      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${self.member_email}" } }' https://cloudidentity.googleapis.com/v1beta1/${self.group}/memberships"
+      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships"
     EOT
   }
 }
 
 resource "null_resource" "terraform_planner_membership" {
-  group        = var.terraform_planners_google_group_id
-  member_email = google_service_account.terraform_planner.email
-  roles        = var.group_roles
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<-EOT
       echo "${var.group_roles}"
-      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${self.member_email}" } }' https://cloudidentity.googleapis.com/v1beta1/${self.group}/memberships"
+      curl -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": [ { "name": "MEMBER" } ], "preferredMemberKey": { "id": "${google_service_account.terraform_planner.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships"
     EOT
   }
 }
