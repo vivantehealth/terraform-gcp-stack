@@ -80,7 +80,7 @@ resource "null_resource" "terraformer_membership" {
   }
 }
 
-resource "google_cloud_identity_group_membership" "terraform_planner_membership" {
+resource "null_resource" "terraform_planner_membership" {
   group        = var.terraform_planners_google_group_id
   member_email = google_service_account.terraform_planner.email
   roles        = var.group_roles
