@@ -72,12 +72,8 @@ resource "google_cloud_identity_group_membership" "terraformer_membership" {
   preferred_member_key {
     id = google_service_account.terraformer.email
   }
-  lifecycle {
-    ignore_changes = [
-      roles,
-      group,
-      preferred_member_key,
-    ]
+  provisioner "local-exec" {
+    command = "echo this should work"
   }
   # Create a "roles" block for each string in var.group_roles
   dynamic "roles" {
@@ -92,6 +88,9 @@ resource "google_cloud_identity_group_membership" "terraform_planner_membership"
   group = var.terraform_planners_google_group_id
   preferred_member_key {
     id = google_service_account.terraform_planner.email
+  }
+  provisioner "local-exec" {
+    command = "echo this should also work"
   }
   # Create a "roles" block for each string in var.group_roles
   dynamic "roles" {
