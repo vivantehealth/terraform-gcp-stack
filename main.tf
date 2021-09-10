@@ -110,7 +110,7 @@ resource "null_resource" "terraform_planner_membership" {
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       bearer=$(gcloud auth print-access-token)
       output_file=$(mktemp)
-      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.terraform_planner.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships)
+      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.terraform_planner.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships)
       if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
         >&2 cat $output_file
         exit 22
