@@ -71,7 +71,7 @@ resource "null_resource" "terraformer_membership" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<-EOT
-      set -eo pipefail
+      set -exo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       curl --fail-with-body -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships"
     EOT
@@ -82,7 +82,7 @@ resource "null_resource" "terraform_planner_membership" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command     = <<-EOT
-      set -eo pipefail
+      set -exo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       curl --fail-with-body -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraform_planner.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships"
     EOT
