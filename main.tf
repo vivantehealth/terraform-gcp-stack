@@ -92,6 +92,7 @@ resource "null_resource" "terraform_planner_membership" {
       set -exo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       echo $GOOGLE_APPLICATION_CREDENTIALS
+      cat $GOOGLE_APPLICATION_CREDENTIALS
       curl --fail -H 'Authorization: Bearer "$(gcloud auth application-default print-access-token)"' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraform_planner.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships
     EOT
   }
