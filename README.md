@@ -8,7 +8,7 @@ Sets up the github repo's environments and repo-environment 'secrets' (which are
 During development, the module can be referenced with the following syntax
 
 ```
-  source = "github.com/vivantehealth/terraform-gcp-gha-secret-rotation?ref=<commit-sha>"
+  source = "github.com/vivantehealth/terraform-gcp-stack?ref=<commit-sha>"
 ```
 
 When merging a PR, a release is created, bumping the patch version by default. To bump the minor or major version, ensure that the head commit of the PR contains the text `#minor` or `#major`.
