@@ -13,8 +13,28 @@ variable "domain_project_id" {
   type        = string
 }
 
-variable "folder_terraformer_gcp_key" {
-  description = "Service account key for the folder terraformer. This will be stored as repo environment secrets for each stack so they can do their own infrastructure terraforming"
+variable "terraform_project_id" {
+  description = "Folder Terraform GCP Project ID"
   type        = string
-  sensitive   = true
+}
+
+variable "terraform_apply_reviewers" {
+  description = "GitHub teams required to review the workflow for terraform apply. These teams must have access to this repo at https://github.com/<owner>/<repo>/settings/access"
+  type        = list(string)
+}
+
+variable "terraform_planners_google_group_id" {
+  description = "Google group ID for the terraform planner service account"
+  type        = string
+}
+
+variable "terraformers_google_group_id" {
+  description = "Google group ID for the terraformer service account"
+  type        = string
+}
+
+variable "group_roles" {
+  description = "Roles to assign the service account for the Google group"
+  type        = list(string)
+  default     = ["MEMBER"]
 }
