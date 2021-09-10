@@ -67,6 +67,23 @@ resource "google_service_account" "terraform_planner" {
   project      = var.domain_project_id
 }
 
+// Custom provisioners are usually frowned upon, and should only be used as a
+// last resort. That was the case when this was implemented. To enable separate
+// service accounts for plan and apply, where the planner only had read
+// permissions within GCP (so that `terraform plan` doesn't require GHA manual
+// approval for that repo environment), we can't use
+// google_cloud_identity_group_membership because the planner doesn't have any
+// way to read group membership, so it fails. By switching to the local-exec
+// provisioner, we're working around terraform's inability to make an effective
+// plan when it doesn't have the read permission it needs, while still allowing
+// the applier to create the membership.
+//
+// This script transforms the group_roles tfvar into the json structure needed
+// by the API call, then gets the current service account's credentials.
+// Finally, it makes the API call, printing the output to stderr if the call
+// failed or to stdout if it succeeded
+//
+// TODO maybe add a destroy condition provisioner
 resource "null_resource" "terraformer_membership" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
@@ -74,7 +91,7 @@ resource "null_resource" "terraformer_membership" {
       set -eo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       bearer=$(gcloud auth print-access-token)
-      output_file=/tmp/terraformer-output
+      output_file=$(mktemp)
       HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.terraformer.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships)
       if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
         >&2 cat $output_file
@@ -92,7 +109,7 @@ resource "null_resource" "terraform_planner_membership" {
       set -eo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
       bearer=$(gcloud auth print-access-token)
-      output_file=/tmp/terraformer-output
+      output_file=$(mktemp)
       HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.terraform_planner.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships)
       if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
         >&2 cat $output_file
