@@ -1,0 +1,55 @@
+name: Publish Terraform module
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Set up Terraform cli
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform fmt
+        run: |
+          set +e
+          terraform fmt -check
+          if [[ $? -ne 0 ]]; then
+            echo "Be sure to run 'terraform fmt' before committing. This can usually be done in your IDE of choice"
+            exit 1
+          fi
+          set -e
+      - name: TF init
+        run: terraform init -input=false -backend=false
+      - name: TF validate
+        run: terraform validate
+
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: GitHub Tag Bump
+        uses: anothrNick/github-tag-action@1.36.0
+        id: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          WITH_V: false
+          DRY_RUN: true
+      - name: List Release
+        run: echo "This will create the release '${{ steps.tag.outputs.new_tag }}'"
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          body: ${{ github.event.head_commit.message }}
+          tag: ${{ steps.tag.outputs.new_tag }}
+
