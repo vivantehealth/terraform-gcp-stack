@@ -73,7 +73,13 @@ resource "null_resource" "terraformer_membership" {
     command     = <<-EOT
       set -exo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
-      curl --fail-with-body -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships"
+      output_file=$(mktemp)
+      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraformer.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraformers_google_group_id}/memberships)
+      if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
+        >&2 cat $output_file
+        return 22
+      fi
+      cat $output_file
     EOT
   }
 }
@@ -84,7 +90,7 @@ resource "null_resource" "terraform_planner_membership" {
     command     = <<-EOT
       set -exo pipefail
       members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
-      curl --fail-with-body -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraform_planner.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships"
+      curl --fail -H 'Authorization: Bearer $(gcloud auth print-access-token)' -X POST -d '{"roles": $members, "preferredMemberKey": { "id": "${google_service_account.terraform_planner.email}" } }' https://cloudidentity.googleapis.com/v1beta1/${var.terraform_planners_google_group_id}/memberships
     EOT
   }
 }
