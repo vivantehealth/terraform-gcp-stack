@@ -25,26 +25,26 @@ resource "github_actions_environment_secret" "plan_domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
   secret_name     = "DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = var.domain_project_id
+  plaintext_value = base64encode(var.domain_project_id)
 }
 resource "github_actions_environment_secret" "apply_domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = var.domain_project_id
+  plaintext_value = base64encode(var.domain_project_id)
 }
 # Store the terraform state project id for auto terraform backend configuration
 resource "github_actions_environment_secret" "plan_terraform_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
   secret_name     = "TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = var.terraform_project_id
+  plaintext_value = base64encode(var.terraform_project_id)
 }
 resource "github_actions_environment_secret" "apply_terraform_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = var.terraform_project_id
+  plaintext_value = base64encode(var.terraform_project_id)
 }
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
