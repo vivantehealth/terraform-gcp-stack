@@ -72,13 +72,13 @@ resource "google_service_account" "terraform_planner" {
 resource "google_project_iam_member" "terraformer_owner" {
   project = var.domain_project_id
   role    = "roles/owner"
-  member  = "serviceAccount:${google_service_account.terraformer.id}"
+  member  = "serviceAccount:${google_service_account.terraformer.email}"
 }
 
 resource "google_project_iam_member" "terraform_planner_viewer" {
   project = var.domain_project_id
   role    = "roles/viewer"
-  member  = "serviceAccount:${google_service_account.terraform_planner.id}"
+  member  = "serviceAccount:${google_service_account.terraform_planner.email}"
 }
 
 // Custom provisioners are usually frowned upon, and should only be used as a
