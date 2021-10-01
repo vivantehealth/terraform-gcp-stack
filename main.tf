@@ -68,6 +68,19 @@ resource "google_service_account" "terraform_planner" {
   project      = var.domain_project_id
 }
 
+# Give the roles above generous privileges on their domain's project as they'll need to do terraform planning and applying, which covers a broad range of capabilities
+resource "google_project_iam_member" "terraformer_owner" {
+  project = var.domain_project_id
+  role    = "roles/owner"
+  member  = "serviceAccount:${google_service_account.terraformer.id}"
+}
+
+resource "google_project_iam_member" "terraform_planner_viewer" {
+  project = var.domain_project_id
+  role    = "roles/viewer"
+  member  = "serviceAccount:${google_service_account.terraform_planner.id}"
+}
+
 // Custom provisioners are usually frowned upon, and should only be used as a
 // last resort. That was the case when this was implemented. To enable separate
 // service accounts for plan and apply, where the planner only had read
