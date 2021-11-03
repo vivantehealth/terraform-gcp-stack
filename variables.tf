@@ -18,6 +18,11 @@ variable "terraform_project_id" {
   type        = string
 }
 
+variable "docker_registry" {
+  description = "Build artifacts docker registry"
+  type        = string
+}
+
 variable "terraform_apply_reviewers" {
   description = "GitHub teams required to review the workflow for terraform apply. These teams must have access to this repo at https://github.com/<owner>/<repo>/settings/access"
   type        = list(string)
