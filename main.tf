@@ -87,6 +87,31 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
   member  = "serviceAccount:${google_service_account.terraform_planner.email}"
 }
 
+locals {
+  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
+  docker_registry_project = one(regex("^[^/]/([^/]).*$", var.docker_registry))
+}
+
+// Create a docker registry repo
+resource "google_artifact_registry_repository" "docker" {
+  project       = local.docker_registry_project
+  provider      = google-beta
+  location      = "us"
+  repository_id = var.repo
+  description   = "Docker registry for ${var.repo}'s images"
+  format        = "DOCKER"
+}
+// Allow stack's terraformer to manage all docker repo artifacts and versions
+// Terraform planner already has read permissions by its group membership status
+resource "google_artifact_registry_repository_iam_member" "member" {
+  project    = local.docker_registry_project
+  provider   = google-beta
+  location   = google_artifact_registry_repository.docker.location
+  repository = google_artifact_registry_repository.docker.name
+  role       = "roles/artifactregistry.repoAdmin"
+  member     = "serviceAccount:${google_service_account.terraformer.email}"
+}
+
 // Custom provisioners are usually frowned upon, and should only be used as a
 // last resort. That was the case when this was implemented. To enable separate
 // service accounts for plan and apply, where the planner only had read
