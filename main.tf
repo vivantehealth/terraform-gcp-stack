@@ -89,7 +89,7 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
 
 locals {
   // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
-  docker_registry_project = one(regex("^[^/]/([^/]).*$", var.docker_registry))
+  docker_registry_project = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
 }
 
 // Create a docker registry repo
