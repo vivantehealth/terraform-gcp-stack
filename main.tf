@@ -46,9 +46,15 @@ resource "github_actions_environment_secret" "base64_apply_terraform_project_id"
   secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id)
 }
-resource "github_actions_environment_secret" "base64_docker_registry" {
+resource "github_actions_environment_secret" "base64_plan_docker_registry" {
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
+  secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.docker_registry)
+}
+resource "github_actions_environment_secret" "base64_apply_docker_registry" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
 }
@@ -85,6 +91,31 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
   project = var.domain_project_id
   role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.terraform_planner.email}"
+}
+
+locals {
+  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
+  docker_registry_project = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
+}
+
+// Create a docker registry repo
+resource "google_artifact_registry_repository" "docker" {
+  project       = local.docker_registry_project
+  provider      = google-beta
+  location      = "us"
+  repository_id = var.repo
+  description   = "Docker registry for ${var.repo}'s images"
+  format        = "DOCKER"
+}
+// Allow stack's terraformer to manage all docker repo artifacts and versions
+// Terraform planner already has read permissions by its group membership status
+resource "google_artifact_registry_repository_iam_member" "member" {
+  project    = local.docker_registry_project
+  provider   = google-beta
+  location   = google_artifact_registry_repository.docker.location
+  repository = google_artifact_registry_repository.docker.name
+  role       = "roles/artifactregistry.repoAdmin"
+  member     = "serviceAccount:${google_service_account.terraformer.email}"
 }
 
 // Custom provisioners are usually frowned upon, and should only be used as a
