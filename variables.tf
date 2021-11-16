@@ -38,8 +38,13 @@ variable "terraformers_google_group_id" {
   type        = string
 }
 
+variable "registry_readers_google_group_id" {
+  description = "Google group id for artifact registry readers"
+  type        = string
+}
+
 variable "group_roles" {
-  description = "Roles to assign the service account for the Google group"
+  description = "Roles to assign the service account for the terraformers Google group"
   type        = list(string)
   default     = ["MEMBER"]
 }
