@@ -190,3 +190,17 @@ resource "null_resource" "terraformer_planner_membership" {
   }
 }
 
+// Allow terraformer to manage membership of the registry readers security group
+// Terraform planners should already be members of this group
+resource "google_cloud_identity_group_membership" "terraformer_registry_readers_group_membership" {
+  group = var.registry_readers_google_group_id
+  preferred_member_key {
+    id = google_service_account.terraformer.email
+  }
+  roles {
+    name = "MEMBER"
+  }
+  roles {
+    name = "MANAGER"
+  }
+}
