@@ -93,6 +93,12 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
   member  = "serviceAccount:${google_service_account.terraform_planner.email}"
 }
 
+resource "google_project_iam_member" "terraform_planner_security_reviewer" {
+  project = var.domain_project_id
+  role    = "roles/iam.securityReviewer"
+  member  = "serviceAccount:${google_service_account.terraform_planner.email}"
+}
+
 locals {
   // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
   docker_registry_project = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
