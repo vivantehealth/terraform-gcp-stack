@@ -19,8 +19,9 @@ variable "terraform_project_id" {
 }
 
 variable "docker_registry" {
-  description = "Build artifacts docker registry"
+  description = "Build-artifacts docker registry. If not set, repo environment secret will not be set"
   type        = string
+  default     = ""
 }
 
 variable "terraform_apply_reviewers" {
@@ -39,8 +40,9 @@ variable "terraformers_google_group_id" {
 }
 
 variable "registry_readers_google_group_id" {
-  description = "Google group id for artifact registry readers"
+  description = "Google group id for artifact registry readers. Group membership will not be added if this variable is not set"
   type        = string
+  default     = ""
 }
 
 variable "group_roles" {

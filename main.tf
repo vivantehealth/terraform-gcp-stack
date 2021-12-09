@@ -46,12 +46,14 @@ resource "github_actions_environment_secret" "base64_apply_terraform_project_id"
   plaintext_value = base64encode(var.terraform_project_id)
 }
 resource "github_actions_environment_secret" "base64_plan_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
 }
 resource "github_actions_environment_secret" "base64_apply_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
@@ -81,14 +83,14 @@ resource "google_service_account" "terraform_planner" {
 
 # Add workload identity permissions to the service accounts
 resource "google_service_account_iam_member" "workload_identity_planner" {
-  role    = "roles/iam.workloadIdentityUser"
-  member  = "principalSet:"
-  serviceservice_account_id = google_service_account.terraform_planner.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet:"
+  service_account_id = google_service_account.terraform_planner.name
 }
 resource "google_service_account_iam_member" "workload_identity_applier" {
-  role    = "roles/iam.workloadIdentityUser"
-  member  = "principalSet://iam.googleapis.com/${var.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_plan_environment.environment}"
-  serviceservice_account_id = google_service_account.terraformer.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${var.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_plan_environment.environment}"
+  service_account_id = google_service_account.terraformer.name
 }
 
 # Give the roles above generous privileges on their domain's project as they'll need to do terraform planning and applying, which covers a broad range of capabilities
@@ -195,6 +197,7 @@ resource "null_resource" "terraformer_planner_membership" {
 // Allow terraformer to manage membership of the registry readers security group
 // Terraform planners should already be members of this group
 resource "google_cloud_identity_group_membership" "terraformer_registry_readers_group_membership" {
+  count = length(var.registry_readers_google_group_id) > 0 ? 1 : 0
   group = var.registry_readers_google_group_id
   preferred_member_key {
     id = google_service_account.terraformer.email
