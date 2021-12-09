@@ -51,14 +51,7 @@ variable "group_roles" {
   default     = ["MEMBER"]
 }
 
-variable "workload_identity_pool_id" {
-  description = "GCP Workload Identity Pool id for iam policy allowing assuming roles to act as terraformer service accounts"
-  type        = string
-  default     = "projects/504619716518/locations/global/workloadIdentityPools/vh-pool"
-}
-
 variable "workload_identity_provider" {
   description = "GCP Workload Identity provider id for setting repo environment secrets for gcloud setup step"
   type        = string
-  default     = "projects/504619716518/locations/global/workloadIdentityPools/vh-pool/providers/gha-provider"
 }
