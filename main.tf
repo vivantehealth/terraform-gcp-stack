@@ -135,18 +135,16 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
   member  = "serviceAccount:${google_service_account.terraform_planner.email}"
 }
 
-locals {
-  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
-  docker_registry_project = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
-}
-
 // Allow stack's terraformer to manage all docker repo artifacts and versions
 // Terraform planner already has read permissions by its group membership status
 resource "google_artifact_registry_repository_iam_member" "member" {
+  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
+  // This will not work if docker_registry var is not set.
+  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
+  count      = length(var.docker_registry) > 0 ? 1 : 0
   provider   = google-beta
-  project    = local.docker_registry_project
   location   = "us"
-  repository = "projects/${local.docker_registry_project}/locations/us/repositories/${var.repo}"
+  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.terraformer.email}"
 }
