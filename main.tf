@@ -2,9 +2,8 @@
 # run it's own tf pipeline. It involves setting up the github repo's
 # environments and repo-environment 'secrets' (which aren't really secret) for
 # the terraform plan and terraform apply steps. It also creates the repo's
-# terraform service accounts. It usually goes along with the
-# instantiation of the key-rotation module, which rotates the service account
-# keys
+# terraform service accounts, which can be assumed by the repo's github actions
+# workflows using workload identity
 
 # Create repo environments for the service account key secrets
 resource "github_repository_environment" "repo_plan_environment" {
@@ -78,6 +77,18 @@ resource "google_service_account" "terraform_planner" {
   description  = "Terraform read-only SA for ${var.repo}"
   display_name = "${var.repo} Terraform Planner"
   project      = var.domain_project_id
+}
+
+# Add workload identity permissions to the service accounts
+resource "google_service_account_iam_member" "workload_identity_planner" {
+  role    = "roles/iam.workloadIdentityUser"
+  member  = "principalSet:"
+  serviceservice_account_id = google_service_account.terraform_planner.name
+}
+resource "google_service_account_iam_member" "workload_identity_applier" {
+  role    = "roles/iam.workloadIdentityUser"
+  member  = "principalSet://iam.googleapis.com/${var.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_plan_environment.environment}"
+  serviceservice_account_id = google_service_account.terraformer.name
 }
 
 # Give the roles above generous privileges on their domain's project as they'll need to do terraform planning and applying, which covers a broad range of capabilities

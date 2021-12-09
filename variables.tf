@@ -48,3 +48,9 @@ variable "group_roles" {
   type        = list(string)
   default     = ["MEMBER"]
 }
+
+variable "workload_identity_pool_id" {
+  description = "GCP Workload Identity Pool ID for assuming roles to act as terraformer service accounts"
+  type        = string
+  default     = "principalSet://iam.googleapis.com/projects/504619716518/locations/global/workloadIdentityPools/vh-pool"
+}
