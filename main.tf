@@ -45,6 +45,7 @@ resource "github_actions_environment_secret" "base64_apply_terraform_project_id"
   secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id)
 }
+# Store the docker registry (if variable set for this stack)
 resource "github_actions_environment_secret" "base64_plan_docker_registry" {
   count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
@@ -58,6 +59,31 @@ resource "github_actions_environment_secret" "base64_apply_docker_registry" {
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
+}
+# Set parameters needed for workload identity
+resource "github_actions_environment_secret" "plan_gcp_service_account" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_plan_environment.environment
+  secret_name     = "GCP_SERVICE_ACCOUNT"
+  plaintext_value = google_service_account.terraform_planner.email
+}
+resource "github_actions_environment_secret" "apply_gcp_service_account" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_apply_environment.environment
+  secret_name     = "GCP_SERVICE_ACCOUNT"
+  plaintext_value = google_service_account.terraform_planner.email
+}
+resource "github_actions_environment_secret" "plan_workload_identity_provider" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_plan_environment.environment
+  secret_name     = "WORKLOAD_IDENTITY_PROVIDER"
+  plaintext_value = var.workload_identity_provider
+}
+resource "github_actions_environment_secret" "apply_workload_identity_provider" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_apply_environment.environment
+  secret_name     = "WORKLOAD_IDENTITY_PROVIDER"
+  plaintext_value = var.workload_identity_provider
 }
 
 
