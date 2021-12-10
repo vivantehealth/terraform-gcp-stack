@@ -113,13 +113,11 @@ locals {
 # Add workload identity permissions to the service accounts
 resource "google_service_account_iam_member" "workload_identity_planner" {
   role               = "roles/iam.workloadIdentityUser"
-  provider           = google-beta
   member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_plan_environment.environment}"
   service_account_id = google_service_account.terraform_planner.name
 }
 resource "google_service_account_iam_member" "workload_identity_applier" {
   role               = "roles/iam.workloadIdentityUser"
-  provider           = google-beta
   member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_apply_environment.environment}"
   service_account_id = google_service_account.terraformer.name
 }
