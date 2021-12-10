@@ -64,26 +64,26 @@ resource "github_actions_environment_secret" "base64_apply_docker_registry" {
 resource "github_actions_environment_secret" "plan_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
-  secret_name     = "GCP_SERVICE_ACCOUNT"
-  plaintext_value = google_service_account.terraform_planner.email
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(google_service_account.terraform_planner.email)
 }
 resource "github_actions_environment_secret" "apply_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
-  secret_name     = "GCP_SERVICE_ACCOUNT"
-  plaintext_value = google_service_account.terraform_planner.email
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(google_service_account.terraform_planner.email)
 }
 resource "github_actions_environment_secret" "plan_workload_identity_provider" {
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
-  secret_name     = "WORKLOAD_IDENTITY_PROVIDER"
-  plaintext_value = var.workload_identity_provider
+  secret_name     = "BASE64_WORKLOAD_IDENTITY_PROVIDER" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.workload_identity_provider)
 }
 resource "github_actions_environment_secret" "apply_workload_identity_provider" {
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
-  secret_name     = "WORKLOAD_IDENTITY_PROVIDER"
-  plaintext_value = var.workload_identity_provider
+  secret_name     = "BASE64_WORKLOAD_IDENTITY_PROVIDER" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.workload_identity_provider)
 }
 
 
