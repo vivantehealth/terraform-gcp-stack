@@ -2,9 +2,8 @@
 # run it's own tf pipeline. It involves setting up the github repo's
 # environments and repo-environment 'secrets' (which aren't really secret) for
 # the terraform plan and terraform apply steps. It also creates the repo's
-# terraform service accounts. It usually goes along with the
-# instantiation of the key-rotation module, which rotates the service account
-# keys
+# terraform service accounts, which can be assumed by the repo's github actions
+# workflows using workload identity
 
 # Create repo environments for the service account key secrets
 resource "github_repository_environment" "repo_plan_environment" {
@@ -46,19 +45,34 @@ resource "github_actions_environment_secret" "base64_apply_terraform_project_id"
   secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id)
 }
+# Store the docker registry (if variable set for this stack)
 resource "github_actions_environment_secret" "base64_plan_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_plan_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
 }
 resource "github_actions_environment_secret" "base64_apply_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
 }
-
+# Set parameters needed for workload identity
+resource "github_actions_environment_secret" "plan_gcp_service_account" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_plan_environment.environment
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(google_service_account.terraform_planner.email)
+}
+resource "github_actions_environment_secret" "apply_gcp_service_account" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_apply_environment.environment
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(google_service_account.terraform_planner.email)
+}
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
 resource "random_id" "suffix" {
@@ -80,6 +94,21 @@ resource "google_service_account" "terraform_planner" {
   project      = var.domain_project_id
 }
 
+locals {
+  workload_identity_pool_id = replace(var.workload_identity_provider, "/\\/providers\\/.*/", "")
+}
+# Add workload identity permissions to the service accounts
+resource "google_service_account_iam_member" "workload_identity_planner" {
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_plan_environment.environment}"
+  service_account_id = google_service_account.terraform_planner.name
+}
+resource "google_service_account_iam_member" "workload_identity_applier" {
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/gcp-org-terraform:environment:${github_repository_environment.repo_apply_environment.environment}"
+  service_account_id = google_service_account.terraformer.name
+}
+
 # Give the roles above generous privileges on their domain's project as they'll need to do terraform planning and applying, which covers a broad range of capabilities
 resource "google_project_iam_member" "terraformer_owner" {
   project = var.domain_project_id
@@ -93,18 +122,16 @@ resource "google_project_iam_member" "terraform_planner_viewer" {
   member  = "serviceAccount:${google_service_account.terraform_planner.email}"
 }
 
-locals {
-  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
-  docker_registry_project = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
-}
-
 // Allow stack's terraformer to manage all docker repo artifacts and versions
 // Terraform planner already has read permissions by its group membership status
 resource "google_artifact_registry_repository_iam_member" "member" {
+  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
+  // This will not work if docker_registry var is not set.
+  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
+  count      = length(var.docker_registry) > 0 ? 1 : 0
   provider   = google-beta
-  project    = local.docker_registry_project
   location   = "us"
-  repository = "projects/${local.docker_registry_project}/locations/us/repositories/${var.repo}"
+  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.terraformer.email}"
 }
@@ -184,6 +211,7 @@ resource "null_resource" "terraformer_planner_membership" {
 // Allow terraformer to manage membership of the registry readers security group
 // Terraform planners should already be members of this group
 resource "google_cloud_identity_group_membership" "terraformer_registry_readers_group_membership" {
+  count = length(var.registry_readers_google_group_id) > 0 ? 1 : 0
   group = var.registry_readers_google_group_id
   preferred_member_key {
     id = google_service_account.terraformer.email
