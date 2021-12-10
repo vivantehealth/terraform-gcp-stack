@@ -73,19 +73,6 @@ resource "github_actions_environment_secret" "apply_gcp_service_account" {
   secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(google_service_account.terraform_planner.email)
 }
-resource "github_actions_environment_secret" "plan_workload_identity_provider" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_plan_environment.environment
-  secret_name     = "BASE64_WORKLOAD_IDENTITY_PROVIDER" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.workload_identity_provider)
-}
-resource "github_actions_environment_secret" "apply_workload_identity_provider" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_apply_environment.environment
-  secret_name     = "BASE64_WORKLOAD_IDENTITY_PROVIDER" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.workload_identity_provider)
-}
-
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
 resource "random_id" "suffix" {
