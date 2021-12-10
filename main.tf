@@ -108,7 +108,7 @@ resource "google_service_account" "terraform_planner" {
 }
 
 locals {
-  workload_identity_pool_id = replace(var.workload_identity_provider, "/provider\\/.*/", "")
+  workload_identity_pool_id = replace(var.workload_identity_provider, "/\\/providers\\/.*/", "")
 }
 # Add workload identity permissions to the service accounts
 resource "google_service_account_iam_member" "workload_identity_planner" {
