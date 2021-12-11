@@ -71,7 +71,7 @@ resource "github_actions_environment_secret" "apply_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_apply_environment.environment
   secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(google_service_account.terraform_planner.email)
+  plaintext_value = base64encode(google_service_account.terraformer.email)
 }
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
