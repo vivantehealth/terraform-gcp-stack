@@ -17,6 +17,11 @@ resource "github_repository_environment" "repo_apply_environment" {
     teams = var.terraform_apply_reviewers
     users = []
   }
+  deployment_branch_policy {
+    protected_branches = var.require_protected_branches
+    #https://github.com/integrations/terraform-provider-github/issues/922#issuecomment-998957627
+    custom_branch_policies = false
+  }
 }
 
 # Store the domain's project id for easier access during github actions workflows
