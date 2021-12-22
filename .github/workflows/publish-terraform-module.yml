@@ -43,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: minor
-          WITH_V: false
+          WITH_V: true
           DRY_RUN: true
       - name: List Release
         run: echo "This will create the release '${{ steps.tag.outputs.new_tag }}'"
@@ -62,7 +62,7 @@ jobs:
           echo "::set-output name=minor::$(echo $MINOR)"
       - uses: dev-drprasad/delete-tag-and-release@v0.2.0
         with:
-          tag_name: ${{ steps.semver.outputs.major }}
+          tag_name: "v${{ steps.semver.outputs.major }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update major version
@@ -72,4 +72,4 @@ jobs:
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           body: ${{ github.event.head_commit.message }}
-          tag: ${{ steps.semver.outputs.major }}
+          tag: "v${{ steps.semver.outputs.major }}"
