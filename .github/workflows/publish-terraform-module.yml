@@ -52,4 +52,24 @@ jobs:
         with:
           body: ${{ github.event.head_commit.message }}
           tag: ${{ steps.tag.outputs.new_tag }}
-
+      - name: Parse higher semantic versions
+        id: semver
+        run: |
+          TAG="${{ steps.tag.outputs.new_tag }}"
+          MINOR="${TAG%.*}"
+          MAJOR="${MINOR%.*}"
+          echo "::set-output name=major::$(echo $MAJOR)"
+          echo "::set-output name=minor::$(echo $MINOR)"
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          tag_name: ${{ steps.semver.outputs.major }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update major version
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          body: ${{ github.event.head_commit.message }}
+          tag: ${{ steps.semver.outputs.major }}
