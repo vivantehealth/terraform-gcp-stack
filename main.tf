@@ -27,25 +27,54 @@ resource "github_repository_environment" "repo_cd_environment" {
   }
 }
 
-# Store some repo secrets for easier access during github actions workflows
+# Store some secrets for easier access during github actions workflows
 # Base64 encoded so the decoded values aren't masked in the logs
-resource "github_actions_secret" "base64_domain_project_id" {
-  repository      = var.repo
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.domain_project_id)
-}
-# Store the terraform state project id for auto terraform backend configuration and env config access
-resource "github_actions_secret" "base64_terraform_project_id" {
-  repository      = var.repo
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.terraform_project_id)
-}
 # Store the docker registry (if variable set for this stack)
 resource "github_actions_secret" "base64_docker_registry" {
   count           = length(var.docker_registry) > 0 ? 1 : 0
   repository      = var.repo
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
+}
+
+# Store the stack's domain project id
+resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_ci_environment.environment
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.domain_project_id)
+}
+resource "github_actions_environment_secret" "cd_base64_domain_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_cd_environment.environment
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.domain_project_id)
+}
+resource "github_actions_environment_secret" "infra_base64_domain_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_infra_environment.environment
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.domain_project_id)
+}
+
+# Store the terraform state project id for auto terraform backend configuration and env config access
+resource "github_actions_environment_secret" "ci_base64_terraform_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_ci_environment.environment
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.terraform_project_id)
+}
+resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_cd_environment.environment
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.terraform_project_id)
+}
+resource "github_actions_environment_secret" "infra_base64_terraform_project_id" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_infra_environment.environment
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.terraform_project_id)
 }
 
 # Set parameters needed for workload identity. Provider id set at the org level
