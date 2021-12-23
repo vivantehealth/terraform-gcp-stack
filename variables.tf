@@ -66,9 +66,3 @@ variable "workload_identity_provider" {
   description = "GCP Workload Identity provider id (for setting repo environment secrets) for gcloud setup step"
   type        = string
 }
-
-variable "require_protected_branches" {
-  description = "Whether to restrict the apply environment to deploying from protected branches. Not recommended when GitHub releases used for deployments"
-  type        = bool
-  default     = false
-}

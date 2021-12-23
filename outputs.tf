@@ -2,15 +2,15 @@ output "repo" {
   value = var.repo
 }
 
-output "repo_plan_sa_email" {
+output "repo_ci_sa_email" {
   value = google_service_account.gha_ci.email
 }
 
-output "repo_plan_sa_id" {
+output "repo_ci_sa_id" {
   value = google_service_account.gha_ci.id
 }
 
-output "repo_plan_environment" {
+output "repo_ci_environment" {
   value = github_repository_environment.repo_ci_environment.environment
 }
 
