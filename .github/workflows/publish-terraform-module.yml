@@ -62,7 +62,7 @@ jobs:
           echo "::set-output name=minor::$(echo $MINOR)"
       - uses: dev-drprasad/delete-tag-and-release@v0.2.0
         with:
-          tag_name: "v${{ steps.semver.outputs.major }}"
+          tag_name: ${{ steps.semver.outputs.major }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update major version
