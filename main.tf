@@ -12,7 +12,7 @@ resource "github_repository_environment" "repo_ci_environment" {
 }
 resource "github_repository_environment" "repo_infra_environment" {
   repository  = var.repo
-  environment = "${var.env_id}-infra"
+  environment = "${var.env_id}-cd-infra"
   reviewers {
     teams = [var.infra_reviewers]
     users = []
@@ -20,7 +20,7 @@ resource "github_repository_environment" "repo_infra_environment" {
 }
 resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
-  environment = "${var.env_id}-cd"
+  environment = "${var.env_id}-cd-services"
   reviewers {
     teams = [(var.cd_reviewers != "" ? var.cd_reviewers : var.infra_reviewers)]
     users = []
