@@ -275,7 +275,7 @@ resource "google_cloud_identity_group_membership" "infra_registry_readers_group_
 // Allow stack's infra SA to manage all docker repo artifacts and versions in
 // the tools environment's docker registry
 // CI/CD SAs already has read permissions by its group membership status
-resource "google_artifact_registry_repository_iam_member" "member" {
+resource "google_artifact_registry_repository_iam_member" "infra_admin" {
   // This will not be created if docker_registry var is not set.
   count = length(var.docker_registry) > 0 ? 1 : 0
 
@@ -290,7 +290,7 @@ resource "google_artifact_registry_repository_iam_member" "member" {
 
 // Allow stack's cd SA to write docker repo artifacts and versions in
 // the tools environment's docker registry
-resource "google_artifact_registry_repository_iam_member" "member" {
+resource "google_artifact_registry_repository_iam_member" "cd_write" {
   // This will not be created if docker_registry var is not set.
   count      = length(var.docker_registry) > 0 ? 1 : 0
   project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
