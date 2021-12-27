@@ -280,11 +280,24 @@ resource "google_artifact_registry_repository_iam_member" "member" {
   count = length(var.docker_registry) > 0 ? 1 : 0
 
   // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
-  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
+  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry)) #can't be a "local" as written
   provider   = google-beta
   location   = "us"
   repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_infra.email}"
+}
+
+// Allow stack's cd SA to write docker repo artifacts and versions in
+// the tools environment's docker registry
+resource "google_artifact_registry_repository_iam_member" "member" {
+  // This will not be created if docker_registry var is not set.
+  count      = length(var.docker_registry) > 0 ? 1 : 0
+  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
+  provider   = google-beta
+  location   = "us"
+  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.gha_cd.email}"
 }
 
