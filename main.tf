@@ -30,8 +30,26 @@ resource "github_repository_environment" "repo_cd_environment" {
 # Store some secrets for easier access during github actions workflows
 # Base64 encoded so the decoded values aren't masked in the logs
 # Store the docker registry (if variable set for this stack)
-resource "github_actions_secret" "base64_docker_registry" {
+# Even though this is the same for all environments, we're doing this as an
+# environment secret rather than a repo secret so that the terraform state is
+# always up to date
+resource "github_actions_environment_secret" "ci_base64_docker_registry" {
   count           = length(var.docker_registry) > 0 ? 1 : 0
+  environment     = github_repository_environment.repo_ci_environment.environment
+  repository      = var.repo
+  secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.docker_registry)
+}
+resource "github_actions_environment_secret" "cd_base64_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
+  environment     = github_repository_environment.repo_cd_environment.environment
+  repository      = var.repo
+  secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(var.docker_registry)
+}
+resource "github_actions_environment_secret" "infra_base64_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
+  environment     = github_repository_environment.repo_infra_environment.environment
   repository      = var.repo
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
