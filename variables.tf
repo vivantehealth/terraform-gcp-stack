@@ -35,6 +35,11 @@ variable "owner" {
   type        = string
 }
 
+variable "restrict_environment_branches" {
+  description = "Whether to restrict deployment using <env>-ci and <env>-cd environments to protected branches"
+  type        = bool
+}
+
 variable "iac_admins_google_group_id" {
   description = "Google group ID to place the infrastructure-provisioning service account in"
   type        = string
