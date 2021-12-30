@@ -12,6 +12,11 @@ data "github_team" "owner" {
 resource "github_repository_environment" "repo_ci_environment" {
   repository  = var.repo
   environment = "${var.env_id}-ci"
+  # There appears to be no way to set the branch pattern through the API. See https://github.com/integrations/terraform-provider-github/issues/922#issuecomment-998957627
+  deployment_branch_policy {
+    protected_branches     = var.restrict_environment_branches
+    custom_branch_policies = !var.restrict_environment_branches
+  }
 }
 resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
@@ -19,6 +24,10 @@ resource "github_repository_environment" "repo_cd_environment" {
   reviewers {
     teams = [data.github_team.owner.id]
     users = []
+  }
+  deployment_branch_policy {
+    protected_branches     = var.restrict_environment_branches
+    custom_branch_policies = !var.restrict_environment_branches
   }
 }
 
