@@ -30,24 +30,8 @@ variable "registry_readers_google_group_id" {
   default     = ""
 }
 
-variable "infra_reviewers" {
-  description = "GitHub teams required to review the job for infrastructure changes. This team must have some access to this repo at https://github.com/<owner>/<repo>/settings/access"
-  type        = string
-}
-
-variable "cd_reviewers" {
-  description = "GitHub teams required to review the job for application updates. This team must have some access to this repo at https://github.com/<owner>/<repo>/settings/access. If not set, will be the same as infra_reviewers"
-  type        = string
-  default     = ""
-}
-
-variable "iac_readers_google_group_id" {
-  description = "Google group ID to place the CI service account in"
-  type        = string
-}
-
-variable "iac_limited_google_group_id" {
-  description = "Google group ID to place the limited CD service account in"
+variable "owner" {
+  description = "GitHub teams required to review the job for application updates. This team must have some access to this repo at https://github.com/<owner>/<repo>/settings/access. Example: eng"
   type        = string
 }
 

@@ -5,24 +5,19 @@
 # terraform service accounts, which can be assumed by the repo's github actions
 # workflows using workload identity
 
+data "github_team" "owner" {
+  slug = var.owner
+}
 # Create repo environments for the service-account-email secrets
 resource "github_repository_environment" "repo_ci_environment" {
   repository  = var.repo
   environment = "${var.env_id}-ci"
 }
-resource "github_repository_environment" "repo_infra_environment" {
-  repository  = var.repo
-  environment = "${var.env_id}-cd-infra"
-  reviewers {
-    teams = [var.infra_reviewers]
-    users = []
-  }
-}
 resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
-  environment = "${var.env_id}-cd-services"
+  environment = "${var.env_id}-cd"
   reviewers {
-    teams = [(var.cd_reviewers != "" ? var.cd_reviewers : var.infra_reviewers)]
+    teams = [data.github_team.owner.id]
     users = []
   }
 }
@@ -47,13 +42,6 @@ resource "github_actions_environment_secret" "cd_base64_docker_registry" {
   secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.docker_registry)
 }
-resource "github_actions_environment_secret" "infra_base64_docker_registry" {
-  count           = length(var.docker_registry) > 0 ? 1 : 0
-  environment     = github_repository_environment.repo_infra_environment.environment
-  repository      = var.repo
-  secret_name     = "BASE64_DOCKER_REGISTRY" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.docker_registry)
-}
 
 # Store the stack's domain project id
 resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
@@ -65,12 +53,6 @@ resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
 resource "github_actions_environment_secret" "cd_base64_domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.domain_project_id)
-}
-resource "github_actions_environment_secret" "infra_base64_domain_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_infra_environment.environment
   secret_name     = "BASE64_DOMAIN_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.domain_project_id)
 }
@@ -88,31 +70,13 @@ resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
   secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id)
 }
-resource "github_actions_environment_secret" "infra_base64_terraform_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_infra_environment.environment
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(var.terraform_project_id)
-}
 
 # Set parameters needed for workload identity. Provider id set at the org level
-resource "github_actions_environment_secret" "ci_gcp_service_account" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(google_service_account.gha_ci.email)
-}
-resource "github_actions_environment_secret" "cd_gcp_service_account" {
+resource "github_actions_environment_secret" "iac_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
   secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(google_service_account.gha_cd.email)
-}
-resource "github_actions_environment_secret" "infra_gcp_service_account" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_infra_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
-  plaintext_value = base64encode(google_service_account.gha_infra.email)
+  plaintext_value = base64encode(google_service_account.gha_iac.email)
 }
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
@@ -121,26 +85,10 @@ resource "random_id" "suffix" {
 }
 
 # Create stack's infrastructure-provisioning service account
-resource "google_service_account" "gha_infra" {
-  account_id   = "sa-gha-infra-${random_id.suffix.hex}"
-  description  = "Infrastructure SA for ${var.repo}"
-  display_name = "${var.repo} Infra"
-  project      = var.domain_project_id
-}
-
-# Create stack's application-updating service account
-resource "google_service_account" "gha_cd" {
-  account_id   = "sa-gha-cd-${random_id.suffix.hex}"
-  description  = "CD SA for ${var.repo}"
-  display_name = "${var.repo} CD"
-  project      = var.domain_project_id
-}
-
-# Create stack's release planning service account
-resource "google_service_account" "gha_ci" {
-  account_id   = "sa-gha-ci-${random_id.suffix.hex}"
-  description  = "CI SA for ${var.repo}"
-  display_name = "${var.repo} CI"
+resource "google_service_account" "gha_iac" {
+  account_id   = "sa-gha-iac-${random_id.suffix.hex}"
+  description  = "IaC SA for ${var.repo}"
+  display_name = "${var.repo} IaC"
   project      = var.domain_project_id
 }
 
@@ -150,137 +98,43 @@ locals {
 }
 # Add workload identity permissions to the service accounts
 # This ensures that only the specified repo and environment can act as the service account
-resource "google_service_account_iam_member" "workload_identity_ci" {
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/${var.repo}:environment:${github_repository_environment.repo_ci_environment.environment}"
-  service_account_id = google_service_account.gha_ci.name
-}
-resource "google_service_account_iam_member" "workload_identity_cd" {
+resource "google_service_account_iam_member" "workload_identity_iac" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/${var.repo}:environment:${github_repository_environment.repo_cd_environment.environment}"
-  service_account_id = google_service_account.gha_cd.name
-}
-resource "google_service_account_iam_member" "workload_identity_infra" {
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/${var.repo}:environment:${github_repository_environment.repo_infra_environment.environment}"
-  service_account_id = google_service_account.gha_infra.name
+  service_account_id = google_service_account.gha_iac.name
 }
 
-# Give the roles above generous base privileges on their domain's project as
-# they'll need to do terraform planning and applying, which covers a broad
+# Give the iac role above generous base privileges on its domain's project as
+# it'll need to do terraform planning and applying, which covers a broad
 # range of capabilities
-resource "google_project_iam_member" "infra_owner" {
+resource "google_project_iam_member" "iac_owner" {
   project = var.domain_project_id
   role    = "roles/owner"
-  member  = "serviceAccount:${google_service_account.gha_infra.email}"
-}
-resource "google_project_iam_member" "cd_viewer" {
-  project = var.domain_project_id
-  role    = "roles/viewer"
-  member  = "serviceAccount:${google_service_account.gha_cd.email}"
-}
-resource "google_project_iam_member" "ci_viewer" {
-  project = var.domain_project_id
-  role    = "roles/viewer"
-  member  = "serviceAccount:${google_service_account.gha_ci.email}"
+  member  = "serviceAccount:${google_service_account.gha_iac.email}"
 }
 
-// Allow stack's cd SA to update k8s resources
-resource "google_project_iam_member" "cd_k8s_dev" {
-  project = var.domain_project_id
-  role    = "roles/container.developer"
-  member  = "serviceAccount:${google_service_account.gha_cd.email}"
-}
-// Allow stack's cd SA to update cloud function code
-resource "google_project_iam_member" "cd_cf_dev" {
-  project = var.domain_project_id
-  role    = "roles/cloudfunctions.developer"
-  member  = "serviceAccount:${google_service_account.gha_cd.email}"
-}
-
-// Custom provisioners are usually frowned upon, and should only be used as a
-// last resort. That was the case when this was implemented. To enable separate
-// service accounts for tf plan and apply, where gha-ci only had read
-// permissions within GCP (so that `terraform plan` doesn't require GHA manual
-// approval for that repo environment), we can't use
-// google_cloud_identity_group_membership because gha-ci doesn't have any
-// way to read group membership, so it fails. By switching to the local-exec
-// provisioner, we're working around terraform's inability to make an effective
-// plan when it doesn't have the read permission it needs, while still allowing
-// the applier to create the membership.
-//
-// This script uses jq to transform the group_roles tfvar into the json
-// structure needed by the API call, then gets the current service account's
-// credentials.
-// Finally, it makes the API call, printing the output to stderr if the call
-// failed or to stdout if it succeeded
-//
-// TODO maybe add a destroy condition provisioner
-// Add gha-infra as iac-admins member or manager/member
-resource "null_resource" "infra_iac_admins_membership" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<-EOT
-      set -eo pipefail
-      members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
-      bearer=$(gcloud auth print-access-token)
-      output_file=$(mktemp)
-      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.gha_infra.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.iac_admins_google_group_id}/memberships)
-      if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
-        >&2 cat $output_file
-        exit 22
-      fi
-      cat $output_file
-    EOT
+// Allow gha-iac SA to view or manage membership of the iac admins security group, depending on the value of var.group_roles
+// Usually only the folder terraformer needs to be a manager.
+resource "google_cloud_identity_group_membership" "iac_admins_membership" {
+  group = var.iac_admins_google_group_id
+  preferred_member_key {
+    id = google_service_account.gha_iac.email
+  }
+  dynamic "roles" {
+    for_each = var.group_roles
+    content {
+      name = roles.value
+    }
   }
 }
 
-// Add gha-ci as iac-readers member
-resource "null_resource" "ci_iac_readers_membership" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<-EOT
-      set -eo pipefail
-      bearer=$(gcloud auth print-access-token)
-      output_file=$(mktemp)
-      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": [{\"name\": \"MEMBER\"}], \"preferredMemberKey\": { \"id\": \"${google_service_account.gha_ci.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.iac_readers_google_group_id}/memberships)
-      if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
-        >&2 cat $output_file
-        exit 22
-      fi
-      cat $output_file
-    EOT
-  }
-}
-
-# Add the gha-infra SA to the iac-readers group so that it can manage
-# group membership when var.group_roles includes MANAGER
-resource "null_resource" "infra_iac_readers_membership" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<-EOT
-      set -eo pipefail
-      members=$(echo '${jsonencode(var.group_roles)}' | jq -c '[.[] | {name: .}]')
-      bearer=$(gcloud auth print-access-token)
-      output_file=$(mktemp)
-      HTTP_CODE=$(curl --silent --output $output_file --write-out "%%{http_code}" -H "Authorization: Bearer $bearer" -H "Content-Type: application/json; charset=utf-8" -X POST -d "{\"roles\": $members, \"preferredMemberKey\": { \"id\": \"${google_service_account.gha_infra.email}\" } }" https://cloudidentity.googleapis.com/v1beta1/${var.iac_readers_google_group_id}/memberships)
-      if [[ $HTTP_CODE -lt 200 || $HTTP_CODE -gt 299 ]] ; then
-        >&2 cat $output_file
-        exit 22
-      fi
-      cat $output_file
-    EOT
-  }
-}
-
-// Allow gha-infra SA to manage membership of the registry readers security group
-// CI/CD SAs should already be members of this group
-resource "google_cloud_identity_group_membership" "infra_registry_readers_group_membership" {
+// Allow gha-iac SA to manage membership of the registry readers security group
+resource "google_cloud_identity_group_membership" "iac_registry_readers_group_membership" {
   // This will not be created if registry_readers_google_group_id var is not set.
   count = length(var.registry_readers_google_group_id) > 0 ? 1 : 0
   group = var.registry_readers_google_group_id
   preferred_member_key {
-    id = google_service_account.gha_infra.email
+    id = google_service_account.gha_iac.email
   }
   roles {
     name = "MEMBER"
@@ -290,10 +144,9 @@ resource "google_cloud_identity_group_membership" "infra_registry_readers_group_
   }
 }
 
-// Allow stack's infra SA to manage all docker repo artifacts and versions in
+// Allow stack's iac SA to manage all docker repo artifacts and versions in
 // the tools environment's docker registry
-// CI/CD SAs already has read permissions by its group membership status
-resource "google_artifact_registry_repository_iam_member" "infra_admin" {
+resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   // This will not be created if docker_registry var is not set.
   count = length(var.docker_registry) > 0 ? 1 : 0
 
@@ -303,19 +156,5 @@ resource "google_artifact_registry_repository_iam_member" "infra_admin" {
   location   = "us"
   repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
-  member     = "serviceAccount:${google_service_account.gha_infra.email}"
+  member     = "serviceAccount:${google_service_account.gha_iac.email}"
 }
-
-// Allow stack's cd SA to write docker repo artifacts and versions in
-// the tools environment's docker registry
-resource "google_artifact_registry_repository_iam_member" "cd_write" {
-  // This will not be created if docker_registry var is not set.
-  count      = length(var.docker_registry) > 0 ? 1 : 0
-  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
-  provider   = google-beta
-  location   = "us"
-  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
-  role       = "roles/artifactregistry.writer"
-  member     = "serviceAccount:${google_service_account.gha_cd.email}"
-}
-
