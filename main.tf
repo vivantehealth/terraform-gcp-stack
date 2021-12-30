@@ -81,7 +81,13 @@ resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
 }
 
 # Set parameters needed for workload identity. Provider id set at the org level
-resource "github_actions_environment_secret" "iac_gcp_service_account" {
+resource "github_actions_environment_secret" "ci_gcp_service_account" {
+  repository      = var.repo
+  environment     = github_repository_environment.repo_ci_environment.environment
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
+  plaintext_value = base64encode(google_service_account.gha_iac.email)
+}
+resource "github_actions_environment_secret" "cd_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
   secret_name     = "BASE64_GCP_SERVICE_ACCOUNT" #tfsec:ignore:GEN003 this isn't sensitive
