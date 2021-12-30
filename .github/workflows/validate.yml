@@ -1,0 +1,30 @@
+name: Validate Terraform module
+
+on:
+  push:
+    branches:
+      - "*"
+      - "!main"
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Set up Terraform cli
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform fmt
+        run: |
+          set +e
+          terraform fmt -check
+          if [[ $? -ne 0 ]]; then
+            echo "Be sure to run 'terraform fmt' before committing. This can usually be done in your IDE of choice"
+            exit 1
+          fi
+          set -e
+      - name: TF init
+        run: terraform init -input=false -backend=false
+      - name: TF validate
+        run: terraform validate
