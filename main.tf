@@ -112,8 +112,14 @@ locals {
   workload_identity_pool_id = replace(var.workload_identity_provider, "/\\/providers\\/.*/", "")
 }
 # Add workload identity permissions to the service accounts
-# This ensures that only the specified repo and environment can act as the service account
-resource "google_service_account_iam_member" "workload_identity_iac" {
+# This ensures that only the specified repo and environment can act as the
+# service account
+resource "google_service_account_iam_member" "workload_identity_iac_ci" {
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/${var.repo}:environment:${github_repository_environment.repo_ci_environment.environment}"
+  service_account_id = google_service_account.gha_iac.name
+}
+resource "google_service_account_iam_member" "workload_identity_iac_cd" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${local.workload_identity_pool_id}/attribute.repo_env/repo:vivantehealth/${var.repo}:environment:${github_repository_environment.repo_cd_environment.environment}"
   service_account_id = google_service_account.gha_iac.name
