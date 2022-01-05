@@ -35,6 +35,12 @@ variable "owner" {
   type        = string
 }
 
+variable "skip_cd_approval" {
+  description = "Whether to require manual approval for the cd repo environment. This is only used for reducing the number of manual approvals needed when the uat and prd deployments are combined, and should only be set to true for prd"
+  type        = bool
+  default     = false
+}
+
 variable "restrict_environment_branches" {
   description = "Whether to restrict deployment using <env>-ci and <env>-cd environments to protected branches"
   type        = bool
