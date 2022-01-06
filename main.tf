@@ -22,7 +22,7 @@ resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
   environment = "${var.env_id}-cd"
   reviewers {
-    teams = var.skip_cd_approval == "true" ? [] : [data.github_team.owner.id]
+    teams = var.skip_cd_approval == true ? [] : [data.github_team.owner.id]
     users = []
   }
   deployment_branch_policy {
