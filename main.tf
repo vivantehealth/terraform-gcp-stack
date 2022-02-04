@@ -177,7 +177,7 @@ resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
   project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry)) #can't be a "local" as written
   provider   = google-beta
-  location   = "us"
+  location   = "us-central1"
   repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_iac.email}"
