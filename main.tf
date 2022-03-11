@@ -44,14 +44,14 @@ resource "github_actions_environment_secret" "ci_base64_docker_registry" {
   count           = length(var.docker_registry) > 0 ? 1 : 0
   environment     = github_repository_environment.repo_ci_environment.environment
   repository      = var.repo
-  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 resource "github_actions_environment_secret" "cd_base64_docker_registry" {
   count           = length(var.docker_registry) > 0 ? 1 : 0
   environment     = github_repository_environment.repo_cd_environment.environment
   repository      = var.repo
-  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
@@ -59,13 +59,13 @@ resource "github_actions_environment_secret" "cd_base64_docker_registry" {
 resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.domain_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 resource "github_actions_environment_secret" "cd_base64_domain_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.domain_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
@@ -73,13 +73,13 @@ resource "github_actions_environment_secret" "cd_base64_domain_project_id" {
 resource "github_actions_environment_secret" "ci_base64_terraform_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.terraform_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
@@ -87,13 +87,13 @@ resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
 resource "github_actions_environment_secret" "ci_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(google_service_account.gha_iac.email) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 resource "github_actions_environment_secret" "cd_gcp_service_account" {
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:GEN003 this isn't sensitive
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(google_service_account.gha_iac.email) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
