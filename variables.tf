@@ -61,3 +61,9 @@ variable "workload_identity_provider" {
   description = "GCP Workload Identity provider id (for setting repo environment secrets) for gcloud setup step"
   type        = string
 }
+
+variable "k8s_namespace" {
+  type        = string
+  description = "Kubernetes namespace"
+  default     = ""
+}
