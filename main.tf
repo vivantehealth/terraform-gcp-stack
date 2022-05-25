@@ -8,7 +8,8 @@
 data "github_team" "owner" {
   slug = var.owner
 }
-# Create repo environments for the service-account-email secrets
+
+# Create repo environments for the secrets and workload identity linking
 resource "github_repository_environment" "repo_ci_environment" {
   repository  = var.repo
   environment = "${var.env_id}-ci"
@@ -32,69 +33,6 @@ resource "github_repository_environment" "repo_cd_environment" {
     protected_branches     = var.restrict_environment_branches
     custom_branch_policies = !var.restrict_environment_branches
   }
-}
-
-# Store some secrets for easier access during github actions workflows
-# Base64 encoded so the decoded values aren't masked in the logs
-# Store the docker registry (if variable set for this stack)
-# Even though this is the same for all environments, we're doing this as an
-# environment secret rather than a repo secret so that the terraform state is
-# always up to date
-resource "github_actions_environment_secret" "ci_base64_docker_registry" {
-  count           = length(var.docker_registry) > 0 ? 1 : 0
-  environment     = github_repository_environment.repo_ci_environment.environment
-  repository      = var.repo
-  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-resource "github_actions_environment_secret" "cd_base64_docker_registry" {
-  count           = length(var.docker_registry) > 0 ? 1 : 0
-  environment     = github_repository_environment.repo_cd_environment.environment
-  repository      = var.repo
-  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-
-# Store the stack's domain project id
-resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.domain_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-resource "github_actions_environment_secret" "cd_base64_domain_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.domain_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-
-# Store the terraform state project id for auto terraform backend configuration and env config access
-resource "github_actions_environment_secret" "ci_base64_terraform_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.terraform_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-resource "github_actions_environment_secret" "cd_base64_terraform_project_id" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(var.terraform_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-
-# Set parameters needed for workload identity. Provider id set at the org level
-resource "github_actions_environment_secret" "ci_gcp_service_account" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_ci_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(google_service_account.gha_iac.email) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
-}
-resource "github_actions_environment_secret" "cd_gcp_service_account" {
-  repository      = var.repo
-  environment     = github_repository_environment.repo_cd_environment.environment
-  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
-  plaintext_value = base64encode(google_service_account.gha_iac.email) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
 # SA id's are limited to 30 chars, so we probably can't include the repo name
@@ -153,6 +91,7 @@ resource "google_cloud_identity_group_membership" "iac_admins_membership" {
 }
 
 // Allow gha-iac SA to manage membership of the registry readers security group
+// This allows it to add registry permissions to runtime service accounts, allowing things like cloud run to pull from the registry
 resource "google_cloud_identity_group_membership" "iac_registry_readers_group_membership" {
   // This will not be created if registry_readers_google_group_id var is not set.
   count = length(var.registry_readers_google_group_id) > 0 ? 1 : 0
@@ -170,6 +109,7 @@ resource "google_cloud_identity_group_membership" "iac_registry_readers_group_me
 
 // Allow stack's iac SA to manage all docker repo artifacts and versions in
 // the tools environment's docker registry
+// FIXME This resource causes all kinds of problems, find a way to decouple these permissions so that stacks can be deleted or renamed without huge issues
 resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   // This will not be created if docker_registry var is not set.
   count = length(var.docker_registry) > 0 ? 1 : 0
