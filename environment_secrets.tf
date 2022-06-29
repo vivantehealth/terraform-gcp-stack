@@ -77,3 +77,35 @@ resource "github_actions_environment_secret" "cd_k8s_namespace" {
   plaintext_value = base64encode(var.k8s_namespace) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
+# Dependabot secrets
+resource "github_dependabot_secret" "dependabot_base64_docker_registry" {
+  count           = length(var.docker_registry) > 0 ? 1 : 0
+  repository      = var.repo
+  secret_name     = "BASE64_DOCKER_REGISTRY"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
+  plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
+}
+# Store the stack's domain project id
+resource "github_dependabot_secret" "dependabot_base64_domain_project_id" {
+  repository      = var.repo
+  secret_name     = "BASE64_DOMAIN_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
+  plaintext_value = base64encode(var.domain_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
+}
+# Store the terraform state project id for auto terraform backend configuration and env config access
+resource "github_dependabot_secret" "dependabot_base64_terraform_project_id" {
+  repository      = var.repo
+  secret_name     = "BASE64_TERRAFORM_PROJECT_ID"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
+  plaintext_value = base64encode(var.terraform_project_id) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
+}
+# Set parameters needed for workload identity. Provider id set at the org level
+resource "github_dependabot_secret" "dependabot_gcp_service_account" {
+  repository      = var.repo
+  secret_name     = "BASE64_GCP_SERVICE_ACCOUNT"                       #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
+  plaintext_value = base64encode(google_service_account.gha_iac.email) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
+}
+# Set parameters needed for k8s/helm
+resource "github_dependabot_secret" "dependabot_k8s_namespace" {
+  count           = length(var.k8s_namespace) > 0 ? 1 : 0
+  repository      = var.repo
+  secret_name     = "BASE64_K8S_NAMESPACE"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
+  plaintext_value = base64encode(var.k8s_namespace) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
+}
