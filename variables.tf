@@ -17,6 +17,7 @@ variable "folder_roles" {
 variable "env_folder_id" {
   description = "Environment folder's id. Required when folder_roles is set"
   type        = string
+  default     = ""
 }
 
 variable "domain_project_id" {
