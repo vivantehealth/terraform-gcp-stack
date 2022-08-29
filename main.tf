@@ -75,6 +75,15 @@ resource "google_project_iam_member" "iac_owner" {
   member  = "serviceAccount:${google_service_account.gha_iac.email}"
 }
 
+// Give the iac accounts permission overrides at the folder level (if specified)
+// Used for things like the log-archive stack to set folder audit configs
+resource "google_folder_iam_member" "iac_folder_permissions" {
+  folder   = var.env_folder_id
+  for_each = toset(var.folder_roles)
+  role     = each.value
+  member   = "serviceAccount:${google_service_account.gha_iac.email}"
+}
+
 // Allow gha-iac SA to view or manage membership of the iac admins security group, depending on the value of var.group_roles
 // Usually only the folder terraformer needs to be a manager.
 resource "google_cloud_identity_group_membership" "iac_admins_membership" {
