@@ -8,6 +8,17 @@ variable "env_id" {
   type        = string
 }
 
+variable "folder_roles" {
+  description = "Roles to give the IaC accounts at the folder level"
+  default     = []
+  type        = list(string)
+}
+
+variable "env_folder_id" {
+  description = "Environment folder's id. Required when folder_roles is set"
+  type        = string
+}
+
 variable "domain_project_id" {
   description = "Domain's GCP Project ID"
   type        = string
