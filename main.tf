@@ -79,7 +79,7 @@ resource "google_project_iam_member" "iac_owner" {
 // Used for things like the log-archive stack to set folder audit configs
 resource "google_folder_iam_member" "iac_folder_permissions" {
   folder   = var.env_folder_id
-  for_each = var.folder_roles
+  for_each = toset(var.folder_roles)
   role     = each.value
   member   = "serviceAccount:${google_service_account.gha_iac.email}"
 }
