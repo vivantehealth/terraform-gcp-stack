@@ -85,3 +85,8 @@ variable "provision_pubsub_topic" {
   type        = bool
   default     = false
 }
+
+variable "dna_project_id" {
+  description = "DNA project i"
+  type        = string
+}
