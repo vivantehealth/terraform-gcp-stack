@@ -79,3 +79,9 @@ variable "k8s_namespace" {
   description = "Kubernetes namespace"
   default     = ""
 }
+
+variable "provision_pubsub_topic" {
+  description = "Whether to permit PubSub topic creation"
+  type        = bool
+  default     = false
+}
