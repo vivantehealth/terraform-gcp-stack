@@ -19,7 +19,7 @@ data "google_storage_bucket_object_content" "env_config" {
 data "terraform_remote_state" "environment_config" {
   backend = "gcs"
   config = {
-    bucket = "${local.env_config.env_terraform_project_id}-state"
+    bucket = "${var.terraform_project_id}-state"
     prefix = "environment"
   }
 }
