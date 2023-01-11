@@ -51,8 +51,8 @@ resource "google_service_account" "gha_iac" {
 locals {
   # Extract pool id from provider id
   workload_identity_pool_id = replace(var.workload_identity_provider, "/\\/providers\\/.*/", "")
-
-  dna_project_id = data.terraform_remote_state.environment_config.outputs.domains["dna"].project_id
+  env_config                = jsondecode(data.google_storage_bucket_object_content.env_config.content)
+  dna_project_id            = data.terraform_remote_state.environment_config.outputs.domains["dna"].project_id
 }
 # Add workload identity permissions to the service accounts
 # This ensures that only the specified repo and environment can act as the
@@ -87,8 +87,8 @@ resource "google_folder_iam_member" "iac_folder_permissions" {
 }
 
 // Give the iac accounts permission to provision PubSub subscriptions in dna projects
-resource "google_folder_iam_member" "iac_topic_permissions" {
-  count = var.provision_pubsub_topic == true ? 1 : 0
+resource "google_project_iam_member" "iac_topic_permissions" {
+  count   = var.provision_pubsub_topic == true ? 1 : 0
   project = local.dna_project_id
   role    = "roles/pubsub.editor"
   member  = "serviceAccount:${google_service_account.gha_iac.email}"

@@ -10,6 +10,11 @@ terraform {
   }
 }
 
+data "google_storage_bucket_object_content" "env_config" {
+  name   = "config.v2.json"
+  bucket = "${var.terraform_project_id}-env-config"
+}
+
 # Get outputs from the environment terraform process
 data "terraform_remote_state" "environment_config" {
   backend = "gcs"
