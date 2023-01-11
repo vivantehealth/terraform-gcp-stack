@@ -88,6 +88,7 @@ resource "google_folder_iam_member" "iac_folder_permissions" {
 
 // Give the iac accounts permission to provision PubSub subscriptions in dna projects
 resource "google_folder_iam_member" "iac_topic_permissions" {
+  count = var.provision_pubsub_topic == true ? 1 : 0
   project = local.dna_project_id
   role    = "roles/pubsub.editor"
   member  = "serviceAccount:${google_service_account.gha_iac.email}"
