@@ -21,7 +21,7 @@ resource "github_repository_environment" "repo_cd_environment" {
   dynamic "reviewers" {
     for_each = var.skip_cd_approval == true ? [] : var.owners
     content {
-      teams = each.value
+      teams = reviewers.value
       users = []
     }
   }
