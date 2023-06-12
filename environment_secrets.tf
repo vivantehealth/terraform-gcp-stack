@@ -78,14 +78,14 @@ resource "github_actions_environment_secret" "cd_gcp_service_account" {
 
 # Set parameters needed for k8s/helm
 resource "github_actions_environment_secret" "ci_k8s_namespace" {
-  count           = length(var.k8s_namespace) > 0 ? 1 : 0
+  count           = var.k8s_namespace == null || length(var.k8s_namespace) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_ci_environment.environment
   secret_name     = "BASE64_K8S_NAMESPACE"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
   plaintext_value = base64encode(var.k8s_namespace) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 resource "github_actions_environment_secret" "cd_k8s_namespace" {
-  count           = length(var.k8s_namespace) > 0 ? 1 : 0
+  count           = var.k8s_namespace == null || length(var.k8s_namespace) > 0 ? 1 : 0
   repository      = var.repo
   environment     = github_repository_environment.repo_cd_environment.environment
   secret_name     = "BASE64_K8S_NAMESPACE"          #tfsec:ignore:general-secrets-no-plaintext-exposure this isn't sensitive
