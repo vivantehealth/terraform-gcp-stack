@@ -5,10 +5,6 @@
 # terraform service accounts, which can be assumed by the repo's github actions
 # workflows using workload identity
 
-data "github_team" "owner" {
-  slug = var.owner
-}
-
 # Create repo environments for the secrets and workload identity linking
 resource "github_repository_environment" "repo_ci_environment" {
   repository  = var.repo
@@ -25,7 +21,7 @@ resource "github_repository_environment" "repo_cd_environment" {
   dynamic "reviewers" {
     for_each = var.skip_cd_approval == true ? [] : [1]
     content {
-      teams = [data.github_team.owner.id]
+      teams = var.owners
       users = []
     }
   }
