@@ -19,6 +19,21 @@ resource "github_actions_environment_secret" "cd_base64_docker_registry" {
   plaintext_value = base64encode(var.docker_registry) #tfsec:ignore:no-plaintext-exposure this isn't sensitive
 }
 
+resource "github_actions_environment_variable" "ci_docker_registry" {
+  count         = length(var.docker_registry) > 0 ? 1 : 0
+  environment   = github_repository_environment.repo_ci_environment.environment
+  repository    = var.repo
+  variable_name = "DOCKER_REGISTRY"
+  value         = var.docker_registry
+}
+resource "github_actions_environment_variable" "cd_docker_registry" {
+  count         = length(var.docker_registry) > 0 ? 1 : 0
+  environment   = github_repository_environment.repo_cd_environment.environment
+  repository    = var.repo
+  variable_name = "DOCKER_REGISTRY"
+  value         = var.docker_registry
+}
+
 # Store the stack's domain project id
 resource "github_actions_environment_secret" "ci_base64_domain_project_id" {
   repository      = var.repo
