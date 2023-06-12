@@ -19,9 +19,9 @@ resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
   environment = "${var.env_id}-cd"
   dynamic "reviewers" {
-    for_each = var.skip_cd_approval == true ? [] : var.owners
+    for_each = var.skip_cd_approval == true ? [] : [1]
     content {
-      teams = tonumber(reviewers.value)
+      teams = var.owners
       users = []
     }
   }
