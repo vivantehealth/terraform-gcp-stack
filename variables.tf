@@ -42,9 +42,9 @@ variable "registry_readers_google_group_id" {
   default     = ""
 }
 
-variable "owner" {
-  description = "GitHub teams required to review the job for application updates. This team must have some access to this repo at https://github.com/<owner>/<repo>/settings/access. Example: eng"
-  type        = string
+variable "owners" {
+  description = "GitHub team ids required to review the job for application updates. This team must have some access to this repo at https://github.com/<owner>/<repo>/settings/access. Obtain id with `gh api https://api.github.com/orgs/<org>/teams/<slug> | jq '.id'`"
+  type        = list(number)
 }
 
 variable "skip_cd_approval" {
