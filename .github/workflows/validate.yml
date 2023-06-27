@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
       - name: Set up Terraform cli
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
       - name: Terraform fmt
         run: |
           set +e
