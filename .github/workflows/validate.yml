@@ -2,9 +2,8 @@ name: Validate Terraform module
 
 on:
   push:
-    branches:
-      - "*"
-      - "!main"
+    branches-ignore:
+      - "main"
 
 jobs:
   validate:
