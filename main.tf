@@ -127,3 +127,15 @@ resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_iac.email}"
 }
+
+// Add the iac SA to any custom groups specified
+resource "google_cloud_identity_group_membership" "custom_group_membership" {
+  for_each = toset(var.group_memberships)
+  group    = each.value
+  preferred_member_key {
+    id = google_service_account.gha_iac.email
+  }
+  roles {
+    name = "MEMBER"
+  }
+}

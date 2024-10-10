@@ -79,3 +79,9 @@ variable "k8s_namespace" {
   description = "Kubernetes namespace"
   default     = ""
 }
+
+variable "group_memberships" {
+  description = "List of group memberships to add the IaC service account to"
+  type        = list(string)
+  default     = []
+}
