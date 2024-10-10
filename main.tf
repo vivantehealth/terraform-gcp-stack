@@ -135,6 +135,7 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
   preferred_member_key {
     id = google_service_account.gha_iac.email
   }
+  // For the initial use case, only MEMBER is needed, but in the future, if the IaC SA needs to add a runtime SA to a group, MANAGER would be needed. This could be either hard-coded or configurable (would require updates to the structure of the group_memberships variable and associated stack yaml schema in gcp-env-terraform)
   roles {
     name = "MEMBER"
   }
