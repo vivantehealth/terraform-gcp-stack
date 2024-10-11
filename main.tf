@@ -127,3 +127,24 @@ resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_iac.email}"
 }
+
+// Look up the group id for each var.group_memberships
+data "google_cloud_identity_group_lookup" "group_lookup" {
+  for_each = toset(var.group_memberships)
+  group_key {
+    id = each.value
+  }
+}
+
+// Add the iac SA to any custom groups specified
+resource "google_cloud_identity_group_membership" "custom_group_membership" {
+  for_each = data.google_cloud_identity_group_lookup.group_lookup
+  group    = each.value.name
+  preferred_member_key {
+    id = google_service_account.gha_iac.email
+  }
+  // For the initial use case, only MEMBER is needed, but in the future, if the IaC SA needs to add a runtime SA to a group, MANAGER would be needed. This could be either hard-coded or configurable (would require updates to the structure of the group_memberships variable and associated stack yaml schema in gcp-env-terraform)
+  roles {
+    name = "MEMBER"
+  }
+}
