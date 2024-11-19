@@ -144,7 +144,6 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
     id = google_service_account.gha_iac.email
   }
   roles {
-    // name = "MEMBER"
-    name = each.value.role == "member" ? "MEMBER" : "MANAGER"
+    name = each.value.group_role == "member" ? "MEMBER" : "MANAGER"
   }
 }
