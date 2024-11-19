@@ -130,7 +130,7 @@ resource "google_artifact_registry_repository_iam_member" "iac_admin" {
 
 // Look up the group id for each var.group_memberships
 data "google_cloud_identity_group_lookup" "group_lookup" {
-  for_each = toset(var.group_memberships)
+  for_each = var.group_memberships
   group_key {
     id = each.value.is_env_group ? "${each.value.group_name}-${var.env_id}@cylinderhealth.com" : "${each.value.group_name}@cylinderhealth.com"
   }
