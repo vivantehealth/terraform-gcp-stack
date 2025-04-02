@@ -7,8 +7,9 @@
 
 # Create repo environments for the secrets and workload identity linking
 resource "github_repository_environment" "repo_ci_environment" {
-  repository  = var.repo
-  environment = "${var.env_id}-ci"
+  repository        = var.repo
+  can_admins_bypass = false
+  environment       = "${var.env_id}-ci"
   # There appears to be no way to set the branch pattern through the API. See https://github.com/integrations/terraform-provider-github/issues/922#issuecomment-998957627
   deployment_branch_policy {
     protected_branches     = false
@@ -16,8 +17,9 @@ resource "github_repository_environment" "repo_ci_environment" {
   }
 }
 resource "github_repository_environment" "repo_cd_environment" {
-  repository  = var.repo
-  environment = "${var.env_id}-cd"
+  repository        = var.repo
+  can_admins_bypass = false
+  environment       = "${var.env_id}-cd"
   dynamic "reviewers" {
     for_each = var.skip_cd_approval == true ? [] : [1]
     content {
