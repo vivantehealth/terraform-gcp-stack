@@ -25,23 +25,25 @@ resource "github_repository_environment" "repo_cd_environment" {
       users = []
     }
   }
+  // There is currently no way to set custom_branch_policies to false when protected_branches is false, so we just set it to true, even though in dev there are no restrictions
+  // "422 "custom_branch_policies" and "protected_branches" cannot have the same value []"
   deployment_branch_policy {
     protected_branches     = false
-    custom_branch_policies = var.restrict_environment_branches
+    custom_branch_policies = true
   }
 }
 
 resource "github_repository_environment_deployment_policy" "ci_env_branch_restriction" {
   count          = var.restrict_environment_branches ? 1 : 0
   repository     = var.repo
-  environment    = "${var.env_id}-ci"
+  environment    = github_repository_environment.repo_ci_environment.environment
   branch_pattern = "main"
 }
 
 resource "github_repository_environment_deployment_policy" "cd_env_branch_restriction" {
   count          = var.restrict_environment_branches ? 1 : 0
   repository     = var.repo
-  environment    = "${var.env_id}-cd"
+  environment    = github_repository_environment.repo_cd_environment.environment
   branch_pattern = "main"
 }
 
