@@ -12,7 +12,7 @@ resource "github_repository_environment" "repo_ci_environment" {
   # There appears to be no way to set the branch pattern through the API. See https://github.com/integrations/terraform-provider-github/issues/922#issuecomment-998957627
   deployment_branch_policy {
     protected_branches     = false
-    custom_branch_policies = var.restrict_environment_branches
+    custom_branch_policies = true
   }
 }
 resource "github_repository_environment" "repo_cd_environment" {
