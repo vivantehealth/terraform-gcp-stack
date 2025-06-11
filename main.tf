@@ -164,3 +164,13 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
     name = "MEMBER"
   }
 }
+
+// Provision the stack's artifact registry repo, but only once (i.e. in dev and tools-dev)
+resource "google_artifact_registry_repository" "stack_repo" {
+  count        = var.env_id == "dev" || var.env_id == "tools-dev" ? 1 : 0
+  project      = replace(var.docker_registry, "us-docker.pkg.dev/", "")
+  location     = "us"
+  repository_id = "${var.repo}"
+  format       = "DOCKER"
+  description  = "Docker registry repo for ${var.repo}'s images"
+}
