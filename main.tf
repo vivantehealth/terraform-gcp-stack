@@ -149,7 +149,7 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
   }
 }
 
-// Provision the stack's artifact registry repo, but only once (i.e. in dev and tools-dev)
+// Provision the stack's artifact registry repo, but only once (i.e. in dev and tools-dev), and if a docker registry is set (i.e. not for stacks created by gcp-org-terraform)
 resource "google_artifact_registry_repository" "stack_repo" {
   count = length(var.docker_registry) > 0 && (var.env_id == "dev" || var.env_id == "tools-dev") ? 1 : 0
   //project      = replace(var.docker_registry, "us-docker.pkg.dev/", "")
@@ -164,8 +164,7 @@ resource "google_artifact_registry_repository" "stack_repo" {
 // Allow stack's iac SA to manage all docker repo artifacts and versions in
 // the tools environment's docker registry
 resource "google_artifact_registry_repository_iam_member" "iac_admin" {
-  // This will not be created if docker_registry var is not set.
-  count = length(var.docker_registry) > 0 ? 1 : 0
+  count = length(var.docker_registry) > 0 && (var.env_id == "dev" || var.env_id == "tools-dev") ? 1 : 0
 
   project    = google_artifact_registry_repository.stack_repo[0].project
   location   = "us"
