@@ -164,11 +164,11 @@ resource "google_artifact_registry_repository" "stack_repo" {
 // Allow stack's iac SA to manage all docker repo artifacts and versions in
 // the tools environment's docker registry
 resource "google_artifact_registry_repository_iam_member" "iac_admin" {
-  count = length(var.docker_registry) > 0 && (var.env_id == "dev" || var.env_id == "tools-dev") ? 1 : 0
+  count = length(var.docker_registry) > 0 ? 1 : 0
 
   project    = google_artifact_registry_repository.stack_repo[0].project
   location   = "us"
-  repository = google_artifact_registry_repository.stack_repo[0].repository_id
+  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_iac.email}"
 }
