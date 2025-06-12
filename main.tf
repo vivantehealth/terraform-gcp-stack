@@ -166,7 +166,7 @@ resource "google_artifact_registry_repository" "stack_repo" {
 resource "google_artifact_registry_repository_iam_member" "iac_admin" {
   count = length(var.docker_registry) > 0 && (var.env_id == "dev" || var.env_id == "tools-dev") ? 1 : 0
 
-  project    = google_artifact_registry_repository.stack_repo[0].project
+  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry))
   location   = "us"
   repository = google_artifact_registry_repository.stack_repo[0].repository_id
   role       = "roles/artifactregistry.repoAdmin"
