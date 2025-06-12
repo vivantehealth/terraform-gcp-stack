@@ -128,22 +128,6 @@ resource "google_cloud_identity_group_membership" "iac_registry_readers_group_me
   }
 }
 
-// Allow stack's iac SA to manage all docker repo artifacts and versions in
-// the tools environment's docker registry
-// FIXME This resource causes all kinds of problems, find a way to decouple these permissions so that stacks can be deleted or renamed without huge issues
-resource "google_artifact_registry_repository_iam_member" "iac_admin" {
-  // This will not be created if docker_registry var is not set.
-  count = length(var.docker_registry) > 0 ? 1 : 0
-
-  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
-  project    = one(regex("^[^/]+/([^/]+).*$", var.docker_registry)) #can't be a "local" as written
-  provider   = google-beta
-  location   = "us"
-  repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}"
-  role       = "roles/artifactregistry.repoAdmin"
-  member     = "serviceAccount:${google_service_account.gha_iac.email}"
-}
-
 // Look up the group id for each var.group_memberships
 data "google_cloud_identity_group_lookup" "group_lookup" {
   for_each = toset(var.group_memberships)
@@ -163,4 +147,29 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
   roles {
     name = "MEMBER"
   }
+}
+
+// Provision the stack's artifact registry repo, but only once (i.e. in dev and tools-dev)
+resource "google_artifact_registry_repository" "stack_repo" {
+  count = length(var.docker_registry) > 0 && (var.env_id == "dev" || var.env_id == "tools-dev") ? 1 : 0
+  //project      = replace(var.docker_registry, "us-docker.pkg.dev/", "")
+  // Extract project id from docker registry. Assumes the format `<registry>/<project>[/etc]`
+  project       = one(regex("^[^/]+/([^/]+).*$", var.docker_registry)) #can't be a "local" as written
+  location      = "us"
+  repository_id = var.repo
+  format        = "DOCKER"
+  description   = "Docker registry repo for ${var.repo}'s images"
+}
+
+// Allow stack's iac SA to manage all docker repo artifacts and versions in
+// the tools environment's docker registry
+resource "google_artifact_registry_repository_iam_member" "iac_admin" {
+  // This will not be created if docker_registry var is not set.
+  count = length(var.docker_registry) > 0 ? 1 : 0
+
+  project    = google_artifact_registry_repository.stack_repo[0].project
+  location   = "us"
+  repository = google_artifact_registry_repository.stack_repo[0].repository_id
+  role       = "roles/artifactregistry.repoAdmin"
+  member     = "serviceAccount:${google_service_account.gha_iac.email}"
 }
