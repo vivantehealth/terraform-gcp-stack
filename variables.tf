@@ -82,6 +82,10 @@ variable "k8s_namespace" {
 
 variable "group_memberships" {
   description = "List of group memberships to add the IaC service account to"
-  type        = list(string)
-  default     = []
+  type = list(object({
+    group_name   = string
+    group_role   = string
+    is_env_group = bool
+  }))
+  default = []
 }

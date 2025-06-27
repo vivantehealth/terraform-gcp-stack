@@ -130,9 +130,12 @@ resource "google_cloud_identity_group_membership" "iac_registry_readers_group_me
 
 // Look up the group id for each var.group_memberships
 data "google_cloud_identity_group_lookup" "group_lookup" {
-  for_each = toset(var.group_memberships)
+  for_each = {
+    for group in var.group_memberships :
+    group.group_name => group
+  }
   group_key {
-    id = each.value
+    id = each.value.is_env_group ? "${each.value.group_name}-${var.env_id}@cylinderhealth.com" : "${each.value.group_name}@cylinderhealth.com"
   }
 }
 
@@ -143,9 +146,14 @@ resource "google_cloud_identity_group_membership" "custom_group_membership" {
   preferred_member_key {
     id = google_service_account.gha_iac.email
   }
-  // For the initial use case, only MEMBER is needed, but in the future, if the IaC SA needs to add a runtime SA to a group, MANAGER would be needed. This could be either hard-coded or configurable (would require updates to the structure of the group_memberships variable and associated stack yaml schema in gcp-env-terraform)
   roles {
     name = "MEMBER"
+  }
+  dynamic "roles" {
+    for_each = each.value.group_role == "manager" ? [1] : []
+    content {
+      name = "MANAGER"
+    }
   }
 }
 
