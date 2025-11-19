@@ -85,3 +85,9 @@ variable "group_memberships" {
   type        = list(string)
   default     = []
 }
+
+variable "additional_approvers" {
+  description = "List of additional approvers of environment deployments"
+  type        = list(number)
+  default     = []
+}

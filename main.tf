@@ -15,13 +15,18 @@ resource "github_repository_environment" "repo_ci_environment" {
     custom_branch_policies = true
   }
 }
+
+locals {
+  deployment_approvers = concat(var.owners, var.additional_approvers)
+}
+
 resource "github_repository_environment" "repo_cd_environment" {
   repository  = var.repo
   environment = "${var.env_id}-cd"
   dynamic "reviewers" {
     for_each = var.skip_cd_approval == true ? [] : [1]
     content {
-      teams = var.owners
+      teams = local.deployment_approvers
       users = []
     }
   }
