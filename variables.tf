@@ -36,10 +36,10 @@ variable "docker_registry" {
   default     = ""
 }
 
-variable "python_registry" {
-  description = "Build-artifacts Python registry. At the moment no environment variable is set for this"
-  type        = string
-  default     = ""
+variable "additional_registries" {
+  description = "Create additional registries in artifacts registry. At the moment no environment variable will be set for this and only Python registries are supported"
+  type        = list()
+  default     = []
 }
 
 variable "registry_readers_google_group_id" {
