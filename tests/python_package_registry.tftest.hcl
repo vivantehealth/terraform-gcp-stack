@@ -1,22 +1,21 @@
-provider "random" {}
-provider "github" {
-  owner = "vivantehealth"
-}
+mock_provider "google" {}
+mock_provider "github" {}
+mock_provider "random" {}
 
 # test {
 #   parallel = true
 # }
 
 variables {
-  repo                            = "test-repo"
-  domain_project_id               = "test-domain-project"
-  terraform_project_id            = "test-terraform-project"
-  iac_admins_google_group_id      = "group@domain.com"
-  workload_identity_provider      = "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
-  owners                          = [1234]
-  restrict_environment_branches   = false
-  additional_registries           = ["python"]
-  docker_registry                 = "us-docker.pkg.dev/project-id/repo-name"
+  repo                          = "test-repo"
+  domain_project_id             = "test-domain-project"
+  terraform_project_id          = "test-terraform-project"
+  iac_admins_google_group_id    = "group@domain.com"
+  workload_identity_provider    = "projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider"
+  owners                        = [1234]
+  restrict_environment_branches = false
+  additional_registries         = ["python"]
+  docker_registry               = "us-docker.pkg.dev/project-id/repo-name"
 }
 
 run "dev_environment_creates_registry" {
