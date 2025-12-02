@@ -27,3 +27,5 @@ jobs:
         run: terraform init -input=false -backend=false
       - name: TF validate
         run: terraform validate
+      - name: TF test
+        run: terraform test
