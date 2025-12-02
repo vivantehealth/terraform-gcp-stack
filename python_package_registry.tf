@@ -22,4 +22,6 @@ resource "google_artifact_registry_repository_iam_member" "additional_registry_i
   repository = "projects/${one(regex("^[^/]+/([^/]+).*$", var.docker_registry))}/locations/us/repositories/${var.repo}-python-packages"
   role       = "roles/artifactregistry.repoAdmin"
   member     = "serviceAccount:${google_service_account.gha_iac.email}"
+
+  depends_on = [google_artifact_registry_repository.additional_registry]
 }
