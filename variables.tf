@@ -38,7 +38,7 @@ variable "docker_registry" {
 
 variable "additional_registries" {
   description = "Create additional registries in artifacts registry. At the moment no environment variable will be set for this and only Python registries are supported"
-  type        = list()
+  type        = list(string)
   default     = []
 }
 
