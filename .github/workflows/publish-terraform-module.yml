@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          fetch-tags: true
       - name: GitHub semver release
         uses: vivantehealth/github-semver-release-action@v0
         with:
